@@ -1,11 +1,44 @@
+import { useState, useEffect } from 'react'
 import { calcTransferRows, fmt } from '../utils.js'
 import { Card } from './IncomeCard.jsx'
+import { getExpenseShareBalance } from '../api.js'
+
+function ExpenseShareBadge() {
+  const [balance, setBalance] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    getExpenseShareBalance()
+      .then(data => setBalance(data.balance))
+      .catch(() => setError(true))
+  }, [])
+
+  if (error) return null
+
+  let text
+  if (balance === null) {
+    text = 'FamilyShare: Lade…'
+  } else if (Math.abs(balance) < 0.01) {
+    text = 'FamilyShare: Ausgeglichen ✓'
+  } else if (balance > 0) {
+    text = `FamilyShare: Karin schuldet Alex ${fmt(balance)}`
+  } else {
+    text = `FamilyShare: Alex schuldet Karin ${fmt(Math.abs(balance))}`
+  }
+
+  return (
+    <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
+      {text}
+    </p>
+  )
+}
 
 export default function TransferView({ budget }) {
   const rows = calcTransferRows(budget)
 
   return (
     <Card title="Monatl. zu überweisen">
+      <ExpenseShareBadge />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

@@ -21,6 +21,15 @@ export async function saveBudget(data) {
   return res.json()
 }
 
+export async function getExpenseShareBalance() {
+  const res = await fetch('/api/expenseshare/balance')
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`GET /api/expenseshare/balance failed: ${res.status} — ${body}`)
+  }
+  return res.json()
+}
+
 export async function getBudgetLog() {
   const res = await fetch('/api/budget/log')
   if (!res.ok) {

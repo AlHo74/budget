@@ -6,6 +6,9 @@ import { dirname, join } from 'path'
 const { Pool } = pg
 const app = express()
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const expensePool = process.env.EXPENSESHARE_DATABASE_URL
+  ? new Pool({ connectionString: process.env.EXPENSESHARE_DATABASE_URL })
+  : null
 
 app.use(express.json())
 
@@ -76,6 +79,25 @@ app.get('/api/budget/log', async (req, res) => {
       'SELECT id, saved_at, duration_seconds FROM budget_log ORDER BY saved_at DESC LIMIT 20'
     )
     res.json(result.rows)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/expenseshare/balance', async (req, res) => {
+  if (!expensePool) return res.status(503).json({ error: 'EXPENSESHARE_DATABASE_URL not configured' })
+  try {
+    const result = await expensePool.query(`
+      SELECT SUM(
+        CASE WHEN paid_by = 'alex' AND split = 0.5 THEN amount * 0.5
+             WHEN paid_by = 'alex' AND split = 1.0 THEN 0
+             ELSE -amount * 0.5 END
+      ) AS balance
+      FROM expenses
+      WHERE is_settlement = false
+    `)
+    res.json({ balance: parseFloat(result.rows[0].balance) || 0 })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: err.message })
