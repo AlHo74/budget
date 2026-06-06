@@ -35,7 +35,7 @@ app.get('/api/budget', async (req, res) => {
 
 app.put('/api/budget', async (req, res) => {
   const { data } = req.body
-  if (!data) return res.status(400).json({ error: 'missing data' })
+  if (!data || typeof data !== 'object' || !data.income) return res.status(400).json({ error: 'invalid data' })
   try {
     const result = await pool.query(
       `INSERT INTO budget (id, data, updated_at) VALUES (1, $1, now())

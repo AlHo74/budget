@@ -81,7 +81,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8" style={{ background: '#0f0f1a' }}>
+    <div className="min-h-screen pb-6" style={{ background: '#0f0f1a' }}>
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <Header
           dirty={dirty}
@@ -101,7 +101,7 @@ export default function App() {
           items={budget.fixedCosts}
           onChange={fixedCosts => update({ fixedCosts })}
           totalLabel="Gesamt Fixkosten"
-          totalBase={budget.income.alex + budget.income.karin}
+          totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
         />
 
         <LineItemCard
@@ -109,7 +109,7 @@ export default function App() {
           items={budget.variableExpenses}
           onChange={variableExpenses => update({ variableExpenses })}
           totalLabel="Gesamt Ausgaben"
-          totalBase={budget.income.alex + budget.income.karin}
+          totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
         />
 
         <SummaryCard budget={budget} />
