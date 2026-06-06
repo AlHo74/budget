@@ -38,16 +38,17 @@ export default function ChangeLogBadge({ lastSaved }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
-  async function handleToggle() {
-    if (!open && log === null) {
-      try {
-        setLogError(null)
-        const data = await getBudgetLog()
-        setLog(data)
-      } catch {
-        setLogError('Fehler beim Laden')
-      }
-    }
+  useEffect(() => {
+    if (!open || log !== null) return
+    let cancelled = false
+    setLogError(null)
+    getBudgetLog()
+      .then(data => { if (!cancelled) setLog(data) })
+      .catch(() => { if (!cancelled) setLogError('Fehler beim Laden') })
+    return () => { cancelled = true }
+  }, [open, log])
+
+  function handleToggle() {
     setOpen(o => !o)
   }
 
