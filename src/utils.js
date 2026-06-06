@@ -136,6 +136,8 @@ export function calcTransferRows(budget) {
     rows.push({ type: 'header', label: 'Ausgaben' })
     for (const item of variableExpenses) {
       const amt = Number(item.amount) || 0
+      // Item named exactly 'Emma' uses Familienbeihilfe (income.emma) to offset Karin's share.
+      // Renaming this item will silently disable the offset.
       if (item.name === 'Emma') {
         const familienbeihilfe = Number(income.emma) || 0
         rows.push({ type: 'row', label: item.name, alex: Math.max(0, amt - familienbeihilfe), karin: familienbeihilfe })

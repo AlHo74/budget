@@ -39,6 +39,10 @@ export default function ChangeLogBadge({ lastSaved }) {
   }, [open])
 
   useEffect(() => {
+    setLog(null)
+  }, [lastSaved])
+
+  useEffect(() => {
     if (!open || log !== null) return
     let cancelled = false
     setLogError(null)
