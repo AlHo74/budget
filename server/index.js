@@ -20,6 +20,13 @@ async function initDb() {
       updated_at TIMESTAMPTZ DEFAULT now()
     )
   `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS budget_log (
+      id SERIAL PRIMARY KEY,
+      saved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      duration_seconds INT
+    )
+  `)
 }
 
 app.get('/api/budget', async (req, res) => {
@@ -37,6 +44,19 @@ app.put('/api/budget', async (req, res) => {
   const { data } = req.body
   if (!data || typeof data !== 'object' || !data.income) return res.status(400).json({ error: 'invalid data' })
   try {
+    const current = await pool.query('SELECT updated_at FROM budget WHERE id = 1')
+    if (current.rows.length > 0) {
+      const dur = await pool.query(
+        `SELECT EXTRACT(EPOCH FROM (now() - $1))::INT AS secs`,
+        [current.rows[0].updated_at]
+      )
+      await pool.query(
+        'INSERT INTO budget_log (saved_at, duration_seconds) VALUES (now(), $1)',
+        [dur.rows[0].secs]
+      )
+    } else {
+      await pool.query('INSERT INTO budget_log (saved_at, duration_seconds) VALUES (now(), NULL)')
+    }
     const result = await pool.query(
       `INSERT INTO budget (id, data, updated_at) VALUES (1, $1, now())
        ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = now()
@@ -44,6 +64,18 @@ app.put('/api/budget', async (req, res) => {
       [JSON.stringify(data)]
     )
     res.json(result.rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/budget/log', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, saved_at, duration_seconds FROM budget_log ORDER BY saved_at DESC LIMIT 20'
+    )
+    res.json(result.rows)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: err.message })
