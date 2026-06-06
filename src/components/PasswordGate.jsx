@@ -12,6 +12,12 @@ export default function PasswordGate({ children }) {
     if (sessionStorage.getItem(STORAGE_KEY) === '1') setUnlocked(true)
   }, [])
 
+  useEffect(() => {
+    if (!error) return
+    const id = setTimeout(() => setError(false), 2000)
+    return () => clearTimeout(id)
+  }, [error])
+
   function handleSubmit(e) {
     e.preventDefault()
     if (input === PASSWORD) {
@@ -20,11 +26,10 @@ export default function PasswordGate({ children }) {
     } else {
       setError(true)
       setInput('')
-      setTimeout(() => setError(false), 2000)
     }
   }
 
-  if (unlocked) return children
+  if (unlocked) return <>{children}</>
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#0f0f1a' }}>
@@ -48,9 +53,7 @@ export default function PasswordGate({ children }) {
             onChange={e => setInput(e.target.value)}
             placeholder="Passwort"
             autoFocus
-            className={`w-full px-4 py-3 rounded-xl text-white text-center text-lg tracking-widest focus:outline-none transition-colors ${
-              error ? 'border-red-500' : 'border-white/10'
-            }`}
+            className="w-full px-4 py-3 rounded-xl text-white text-center text-lg tracking-widest focus:outline-none transition-colors"
             style={{
               background: 'rgba(255,255,255,0.07)',
               border: `1px solid ${error ? '#ef4444' : 'rgba(255,255,255,0.15)'}`,
