@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcTotals, fmt, pct } from './utils.js'
+import { calcTotals, fmt, pct, sumItems, defaultBudget } from './utils.js'
 
 const baseBudget = {
   income: { alex: 3000, karin: 2000, emma: 500 },
@@ -78,5 +78,46 @@ describe('pct', () => {
   })
   it('returns — when total is 0', () => {
     expect(pct(100, 0)).toBe('—')
+  })
+})
+
+describe('sumItems', () => {
+  it('sums item amounts', () => {
+    expect(sumItems([{ id: '1', name: 'a', amount: 100 }, { id: '2', name: 'b', amount: 50 }])).toBe(150)
+  })
+  it('returns 0 for empty array', () => {
+    expect(sumItems([])).toBe(0)
+  })
+  it('returns 0 for null/undefined input', () => {
+    expect(sumItems(null)).toBe(0)
+    expect(sumItems(undefined)).toBe(0)
+  })
+  it('coerces string amounts', () => {
+    expect(sumItems([{ id: '1', name: 'a', amount: '42' }])).toBe(42)
+  })
+})
+
+describe('defaultBudget', () => {
+  it('returns correct structure', () => {
+    const b = defaultBudget()
+    expect(b).toHaveProperty('income')
+    expect(b).toHaveProperty('fixedCosts')
+    expect(b).toHaveProperty('variableExpenses')
+    expect(b).toHaveProperty('alex.investments')
+    expect(b).toHaveProperty('alex.individualCosts')
+    expect(b).toHaveProperty('alex.debtRepayment')
+    expect(b).toHaveProperty('karin.investments')
+    expect(b).toHaveProperty('karin.individualCosts')
+    expect(b).toHaveProperty('karin.debtRepayment')
+  })
+  it('pre-populates 14 fixed cost items', () => {
+    const b = defaultBudget()
+    expect(b.fixedCosts).toHaveLength(14)
+  })
+  it('each item has a non-empty id', () => {
+    const b = defaultBudget()
+    for (const item of b.fixedCosts) {
+      expect(item.id).toBeTruthy()
+    }
   })
 })
