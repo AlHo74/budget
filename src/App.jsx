@@ -7,6 +7,7 @@ import LineItemCard from './components/LineItemCard.jsx'
 import SummaryCard from './components/SummaryCard.jsx'
 import PersonSection from './components/PersonSection.jsx'
 import MobileBottomBar from './components/MobileBottomBar.jsx'
+import TransferView from './components/TransferView.jsx'
 
 export default function App() {
   const [budget, setBudget] = useState(null)
@@ -16,6 +17,7 @@ export default function App() {
   const [lastSaved, setLastSaved] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const [activeTab, setActiveTab] = useState('budget')
 
   const load = useCallback(async () => {
     try {
@@ -89,47 +91,55 @@ export default function App() {
           saveError={saveError}
           lastSaved={lastSaved}
           onSave={handleSave}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
 
-        <IncomeCard
-          income={budget.income}
-          onChange={income => update({ income })}
-        />
+        {activeTab === 'transfer' ? (
+          <TransferView budget={budget} />
+        ) : (
+          <>
+            <IncomeCard
+              income={budget.income}
+              onChange={income => update({ income })}
+            />
 
-        <LineItemCard
-          title="Beide – Fixkosten"
-          items={budget.fixedCosts}
-          onChange={fixedCosts => update({ fixedCosts })}
-          totalLabel="Gesamt Fixkosten"
-          totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
-        />
+            <LineItemCard
+              title="Beide – Fixkosten"
+              items={budget.fixedCosts}
+              onChange={fixedCosts => update({ fixedCosts })}
+              totalLabel="Gesamt Fixkosten"
+              totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
+            />
 
-        <LineItemCard
-          title="Beide – Ausgaben"
-          items={budget.variableExpenses}
-          onChange={variableExpenses => update({ variableExpenses })}
-          totalLabel="Gesamt Ausgaben"
-          totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
-        />
+            <LineItemCard
+              title="Beide – Ausgaben"
+              items={budget.variableExpenses}
+              onChange={variableExpenses => update({ variableExpenses })}
+              totalLabel="Gesamt Ausgaben"
+              totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
+            />
 
-        <SummaryCard budget={budget} />
+            <SummaryCard budget={budget} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PersonSection
-            name="Alex"
-            person={budget.alex}
-            income={budget.income.alex}
-            budget={budget}
-            onChange={alex => update({ alex })}
-          />
-          <PersonSection
-            name="Karin"
-            person={budget.karin}
-            income={budget.income.karin}
-            budget={budget}
-            onChange={karin => update({ karin })}
-          />
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <PersonSection
+                name="Alex"
+                person={budget.alex}
+                income={budget.income.alex}
+                budget={budget}
+                onChange={alex => update({ alex })}
+              />
+              <PersonSection
+                name="Karin"
+                person={budget.karin}
+                income={budget.income.karin}
+                budget={budget}
+                onChange={karin => update({ karin })}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <MobileBottomBar dirty={dirty} saving={saving} onSave={handleSave} />
