@@ -114,3 +114,68 @@ export function defaultBudget() {
     },
   }
 }
+
+export function calcTransferRows(budget) {
+  const { income, fixedCosts, variableExpenses, alex, karin } = budget
+
+  const gesamtOhneEmma = (Number(income.alex) || 0) + (Number(income.karin) || 0)
+  const alexRatio = gesamtOhneEmma > 0 ? (Number(income.alex) || 0) / gesamtOhneEmma : 0.5
+  const karinRatio = gesamtOhneEmma > 0 ? (Number(income.karin) || 0) / gesamtOhneEmma : 0.5
+
+  const rows = []
+
+  if (fixedCosts.length > 0) {
+    rows.push({ type: 'header', label: 'Fixkosten' })
+    for (const item of fixedCosts) {
+      const amt = Number(item.amount) || 0
+      rows.push({ type: 'row', label: item.name, alex: amt * alexRatio, karin: amt * karinRatio })
+    }
+  }
+
+  if (variableExpenses.length > 0) {
+    rows.push({ type: 'header', label: 'Ausgaben' })
+    for (const item of variableExpenses) {
+      const amt = Number(item.amount) || 0
+      if (item.name === 'Emma') {
+        const familienbeihilfe = Number(income.emma) || 0
+        rows.push({ type: 'row', label: item.name, alex: Math.max(0, amt - familienbeihilfe), karin: familienbeihilfe })
+      } else {
+        rows.push({ type: 'row', label: item.name, alex: amt * alexRatio, karin: amt * karinRatio })
+      }
+    }
+  }
+
+  const alexItems = [
+    ...(alex.investments ?? []),
+    ...(alex.individualCosts ?? []),
+    ...(alex.debtRepayment ?? []),
+  ]
+  if (alexItems.length > 0) {
+    rows.push({ type: 'header', label: 'Alex' })
+    for (const item of alexItems) {
+      rows.push({ type: 'row', label: item.name, alex: Number(item.amount) || 0, karin: null })
+    }
+  }
+
+  const karinItems = [
+    ...(karin.investments ?? []),
+    ...(karin.individualCosts ?? []),
+    ...(karin.debtRepayment ?? []),
+  ]
+  if (karinItems.length > 0) {
+    rows.push({ type: 'header', label: 'Karin' })
+    for (const item of karinItems) {
+      rows.push({ type: 'row', label: item.name, alex: null, karin: Number(item.amount) || 0 })
+    }
+  }
+
+  const totalAlex = rows
+    .filter(r => r.type === 'row' && r.alex !== null)
+    .reduce((s, r) => s + r.alex, 0)
+  const totalKarin = rows
+    .filter(r => r.type === 'row' && r.karin !== null)
+    .reduce((s, r) => s + r.karin, 0)
+  rows.push({ type: 'total', label: 'Gesamt', alex: totalAlex, karin: totalKarin })
+
+  return rows
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcTotals, fmt, pct, sumItems, defaultBudget } from './utils.js'
+import { calcTotals, fmt, pct, sumItems, defaultBudget, calcTransferRows } from './utils.js'
 
 const baseBudget = {
   income: { alex: 3000, karin: 2000, emma: 500 },
@@ -119,5 +119,86 @@ describe('defaultBudget', () => {
     for (const item of b.fixedCosts) {
       expect(item.id).toBeTruthy()
     }
+  })
+})
+
+describe('calcTransferRows', () => {
+  const budget = {
+    income: { alex: 3000, karin: 2000, emma: 219 },
+    fixedCosts: [{ id: '1', name: 'Betriebskosten', amount: 500 }],
+    variableExpenses: [
+      { id: '2', name: 'Mobilität', amount: 200 },
+      { id: '3', name: 'Emma', amount: 258 },
+    ],
+    alex: {
+      investments: [{ id: '4', name: 'Fonds', amount: 300 }],
+      individualCosts: [{ id: '5', name: 'Handy', amount: 50 }],
+      debtRepayment: [],
+    },
+    karin: {
+      investments: [],
+      individualCosts: [{ id: '6', name: 'Lifestyle', amount: 100 }],
+      debtRepayment: [],
+    },
+  }
+
+  it('produces header rows for each non-empty section', () => {
+    const rows = calcTransferRows(budget)
+    const headers = rows.filter(r => r.type === 'header').map(r => r.label)
+    expect(headers).toEqual(['Fixkosten', 'Ausgaben', 'Alex', 'Karin'])
+  })
+
+  it('splits fixed costs by income ratio', () => {
+    const rows = calcTransferRows(budget)
+    const row = rows.find(r => r.label === 'Betriebskosten')
+    // alexRatio = 3000/5000 = 0.6, karinRatio = 0.4
+    expect(row.alex).toBeCloseTo(300)
+    expect(row.karin).toBeCloseTo(200)
+  })
+
+  it('applies special Emma calculation', () => {
+    const rows = calcTransferRows(budget)
+    const emma = rows.find(r => r.label === 'Emma')
+    // alex = 258 - 219 = 39, karin = 219 (Familienbeihilfe)
+    expect(emma.alex).toBeCloseTo(39)
+    expect(emma.karin).toBeCloseTo(219)
+  })
+
+  it('floors alex Emma share at 0 when Familienbeihilfe exceeds costs', () => {
+    const b = { ...budget, income: { ...budget.income, emma: 300 } }
+    const rows = calcTransferRows(b)
+    const emma = rows.find(r => r.label === 'Emma')
+    expect(emma.alex).toBe(0)
+    expect(emma.karin).toBe(300)
+  })
+
+  it('puts Alex individual items in alex column with karin=null', () => {
+    const rows = calcTransferRows(budget)
+    const fonds = rows.find(r => r.label === 'Fonds')
+    expect(fonds.alex).toBe(300)
+    expect(fonds.karin).toBeNull()
+  })
+
+  it('puts Karin individual items in karin column with alex=null', () => {
+    const rows = calcTransferRows(budget)
+    const lifestyle = rows.find(r => r.label === 'Lifestyle')
+    expect(lifestyle.alex).toBeNull()
+    expect(lifestyle.karin).toBe(100)
+  })
+
+  it('computes correct totals', () => {
+    const rows = calcTransferRows(budget)
+    const total = rows.find(r => r.type === 'total')
+    // alex: 300 (Betriebskosten×0.6) + 120 (Mobilität×0.6) + 39 (Emma) + 300 (Fonds) + 50 (Handy) = 809
+    expect(total.alex).toBeCloseTo(809)
+    // karin: 200 (Betriebskosten×0.4) + 80 (Mobilität×0.4) + 219 (Emma) + 100 (Lifestyle) = 599
+    expect(total.karin).toBeCloseTo(599)
+  })
+
+  it('omits section header when all items in that section are empty', () => {
+    const b = { ...budget, alex: { investments: [], individualCosts: [], debtRepayment: [] } }
+    const rows = calcTransferRows(b)
+    const headers = rows.filter(r => r.type === 'header').map(r => r.label)
+    expect(headers).not.toContain('Alex')
   })
 })
