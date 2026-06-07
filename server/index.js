@@ -27,8 +27,13 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS budget_log (
       id SERIAL PRIMARY KEY,
       saved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      duration_seconds INT
+      duration_seconds INT,
+      snapshot JSONB
     )
+  `)
+  // Add snapshot column if it doesn't exist (for existing deployments)
+  await pool.query(`
+    ALTER TABLE budget_log ADD COLUMN IF NOT EXISTS snapshot JSONB
   `)
 }
 
@@ -54,11 +59,14 @@ app.put('/api/budget', async (req, res) => {
         [current.rows[0].updated_at]
       )
       await pool.query(
-        'INSERT INTO budget_log (saved_at, duration_seconds) VALUES (now(), $1)',
-        [dur.rows[0].secs]
+        'INSERT INTO budget_log (saved_at, duration_seconds, snapshot) VALUES (now(), $1, $2)',
+        [dur.rows[0].secs, JSON.stringify(data)]
       )
     } else {
-      await pool.query('INSERT INTO budget_log (saved_at, duration_seconds) VALUES (now(), NULL)')
+      await pool.query(
+        'INSERT INTO budget_log (saved_at, duration_seconds, snapshot) VALUES (now(), NULL, $1)',
+        [JSON.stringify(data)]
+      )
     }
     const result = await pool.query(
       `INSERT INTO budget (id, data, updated_at) VALUES (1, $1, now())
@@ -76,7 +84,7 @@ app.put('/api/budget', async (req, res) => {
 app.get('/api/budget/log', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, saved_at, duration_seconds FROM budget_log ORDER BY saved_at DESC LIMIT 20'
+      'SELECT id, saved_at, duration_seconds, snapshot FROM budget_log ORDER BY saved_at DESC LIMIT 20'
     )
     res.json(result.rows)
   } catch (err) {
