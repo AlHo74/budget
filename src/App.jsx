@@ -8,6 +8,7 @@ import SummaryCard from './components/SummaryCard.jsx'
 import PersonSection from './components/PersonSection.jsx'
 import MobileBottomBar from './components/MobileBottomBar.jsx'
 import TransferView from './components/TransferView.jsx'
+import ChangeLogPage from './components/ChangeLogPage.jsx'
 
 export default function App() {
   const [budget, setBudget] = useState(null)
@@ -97,7 +98,9 @@ export default function App() {
           onTabChange={setActiveTab}
         />
 
-        {activeTab === 'transfer' ? (
+        {activeTab === 'log' ? (
+          <ChangeLogPage />
+        ) : activeTab === 'transfer' ? (
           <TransferView budget={budget} />
         ) : (
           <>

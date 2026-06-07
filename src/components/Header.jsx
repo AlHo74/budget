@@ -36,7 +36,7 @@ export default function Header({ dirty, saving, saveError, lastSaved, onSave, ac
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <ChangeLogBadge lastSaved={lastSaved} />
+          <ChangeLogBadge lastSaved={lastSaved} onNavigate={onTabChange} />
           {dirty && (
             <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(234,179,8,0.2)', color: '#facc15' }}>
               ● Nicht gespeichert
@@ -60,6 +60,11 @@ export default function Header({ dirty, saving, saveError, lastSaved, onSave, ac
         <TabButton active={activeTab === 'transfer'} onClick={() => onTabChange('transfer')}>
           Zu überweisen
         </TabButton>
+        {activeTab === 'log' && (
+          <TabButton active={true} onClick={() => onTabChange('log')}>
+            Änderungshistorie
+          </TabButton>
+        )}
       </div>
     </div>
   )
