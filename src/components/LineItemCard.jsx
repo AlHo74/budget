@@ -71,7 +71,7 @@ export default function LineItemCard({ title, items, onChange, totalLabel, total
   }
 
   function addItem() {
-    onChange([...items, { id: crypto.randomUUID(), name: '', amount: 0 }])
+    onChange([...items, { id: Math.random().toString(36).slice(2) + Date.now().toString(36), name: '', amount: 0 }])
   }
 
   const total = sumItems(items)
