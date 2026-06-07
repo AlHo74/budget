@@ -95,40 +95,48 @@ export default function LineItemCard({ title, items, onChange, totalLabel, total
   )
 }
 
-// Two-section card: Ausgaben (top) + Fixkosten (bottom) merged
+// Unified card: all fixedCosts + variableExpenses shown as one flat list.
+// The two arrays are kept separate in the data model (needed by TransferView),
+// but the UI presents and edits them as a single list.
 export function CombinedCostsCard({ fixedCosts, variableExpenses, onFixedChange, onVariableChange, totalBase, accent, borderAccent }) {
-  function updateFixed(id, updated) { onFixedChange(fixedCosts.map(i => i.id === id ? updated : i)) }
-  function deleteFixed(id) { onFixedChange(fixedCosts.filter(i => i.id !== id)) }
-  function addFixed() { onFixedChange([...fixedCosts, { id: uid(), name: '', amount: 0 }]) }
+  // Tag each item with its source array so we know where to dispatch updates/deletes
+  const allItems = [
+    ...variableExpenses.map(i => ({ ...i, _src: 'variable' })),
+    ...fixedCosts.map(i => ({ ...i, _src: 'fixed' })),
+  ]
 
-  function updateVariable(id, updated) { onVariableChange(variableExpenses.map(i => i.id === id ? updated : i)) }
-  function deleteVariable(id) { onVariableChange(variableExpenses.filter(i => i.id !== id)) }
-  function addVariable() { onVariableChange([...variableExpenses, { id: uid(), name: '', amount: 0 }]) }
+  function handleChange(item, updated) {
+    const { _src, ...clean } = updated
+    if (item._src === 'fixed') {
+      onFixedChange(fixedCosts.map(i => i.id === clean.id ? clean : i))
+    } else {
+      onVariableChange(variableExpenses.map(i => i.id === clean.id ? clean : i))
+    }
+  }
 
-  const totalFixed = sumItems(fixedCosts)
-  const totalVariable = sumItems(variableExpenses)
-  const totalAll = totalFixed + totalVariable
+  function handleDelete(item) {
+    if (item._src === 'fixed') {
+      onFixedChange(fixedCosts.filter(i => i.id !== item.id))
+    } else {
+      onVariableChange(variableExpenses.filter(i => i.id !== item.id))
+    }
+  }
+
+  function addItem() {
+    // New items go into fixedCosts
+    onFixedChange([...fixedCosts, { id: uid(), name: '', amount: 0 }])
+  }
+
+  const total = sumItems(fixedCosts) + sumItems(variableExpenses)
 
   return (
-    <Card title="Fixkosten & Ausgaben" accent={accent} borderAccent={borderAccent}>
-      {/* Ausgaben section — at top per spec */}
-      <SectionLabel>Ausgaben</SectionLabel>
-      {variableExpenses.map(item => (
-        <LineItem key={item.id} item={item} onChange={u => updateVariable(item.id, u)} onDelete={() => deleteVariable(item.id)} />
+    <Card title="Fixkosten" accent={accent} borderAccent={borderAccent}>
+      {allItems.map(item => (
+        <LineItem key={item.id} item={item} onChange={u => handleChange(item, u)} onDelete={() => handleDelete(item)} />
       ))}
-      <AddButton onClick={addVariable} />
-
+      <AddButton onClick={addItem} />
       <Divider />
-
-      {/* Fixkosten section */}
-      <SectionLabel>Fixkosten</SectionLabel>
-      {fixedCosts.map(item => (
-        <LineItem key={item.id} item={item} onChange={u => updateFixed(item.id, u)} onDelete={() => deleteFixed(item.id)} />
-      ))}
-      <AddButton onClick={addFixed} />
-
-      <Divider />
-      <TotalRow label="Gesamt" total={totalAll} base={totalBase} />
+      <TotalRow label="Gesamt" total={total} base={totalBase} />
     </Card>
   )
 }
