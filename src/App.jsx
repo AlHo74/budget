@@ -3,7 +3,7 @@ import { getBudget, saveBudget } from './api.js'
 import { defaultBudget } from './utils.js'
 import Header from './components/Header.jsx'
 import IncomeCard from './components/IncomeCard.jsx'
-import LineItemCard from './components/LineItemCard.jsx'
+import LineItemCard, { CombinedCostsCard } from './components/LineItemCard.jsx'
 import SummaryCard from './components/SummaryCard.jsx'
 import PersonSection from './components/PersonSection.jsx'
 import MobileBottomBar from './components/MobileBottomBar.jsx'
@@ -61,7 +61,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f1a' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#131320' }}>
         <p style={{ color: 'rgba(255,255,255,0.4)' }}>Lade…</p>
       </div>
     )
@@ -69,7 +69,7 @@ export default function App() {
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#0f0f1a' }}>
+      <div className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#131320' }}>
         <p className="text-red-400">{loadError}</p>
         <button
           onClick={load}
@@ -82,9 +82,11 @@ export default function App() {
     )
   }
 
+  const totalBase = (Number(budget?.income.alex) || 0) + (Number(budget?.income.karin) || 0)
+
   return (
-    <div className="min-h-screen pb-6" style={{ background: '#0f0f1a' }}>
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="min-h-screen pb-6" style={{ background: '#131320' }}>
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
         <Header
           dirty={dirty}
           saving={saving}
@@ -99,26 +101,23 @@ export default function App() {
           <TransferView budget={budget} />
         ) : (
           <>
-            <IncomeCard
-              income={budget.income}
-              onChange={income => update({ income })}
-            />
+            {/* Two-column: Einkommen + Fixkosten & Ausgaben */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <IncomeCard
+                income={budget.income}
+                onChange={income => update({ income })}
+              />
 
-            <LineItemCard
-              title="Beide – Fixkosten"
-              items={budget.fixedCosts}
-              onChange={fixedCosts => update({ fixedCosts })}
-              totalLabel="Gesamt Fixkosten"
-              totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
-            />
-
-            <LineItemCard
-              title="Beide – Ausgaben"
-              items={budget.variableExpenses}
-              onChange={variableExpenses => update({ variableExpenses })}
-              totalLabel="Gesamt Ausgaben"
-              totalBase={(Number(budget.income.alex) || 0) + (Number(budget.income.karin) || 0)}
-            />
+              <CombinedCostsCard
+                fixedCosts={budget.fixedCosts}
+                variableExpenses={budget.variableExpenses}
+                onFixedChange={fixedCosts => update({ fixedCosts })}
+                onVariableChange={variableExpenses => update({ variableExpenses })}
+                totalBase={totalBase}
+                accent="rgba(239,68,68,0.1)"
+                borderAccent="rgba(239,68,68,0.22)"
+              />
+            </div>
 
             <SummaryCard budget={budget} />
 
