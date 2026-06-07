@@ -142,16 +142,17 @@ describe('calcTransferRows', () => {
     },
   }
 
-  it('produces header rows for each non-empty section', () => {
+  it('produces header rows for Ausgaben, Alex, Karin (not Fixkosten)', () => {
     const rows = calcTransferRows(budget)
     const headers = rows.filter(r => r.type === 'header').map(r => r.label)
-    expect(headers).toEqual(['Fixkosten', 'Ausgaben', 'Alex', 'Karin'])
+    expect(headers).toEqual(['Ausgaben', 'Alex', 'Karin'])
   })
 
-  it('splits fixed costs by income ratio', () => {
+  it('shows Fixkosten as a single summed row split by income ratio', () => {
     const rows = calcTransferRows(budget)
-    const row = rows.find(r => r.label === 'Betriebskosten')
-    // alexRatio = 3000/5000 = 0.6, karinRatio = 0.4
+    const row = rows.find(r => r.label === 'Fixkosten')
+    // 500 total, alexRatio = 3000/5000 = 0.6, karinRatio = 0.4
+    expect(row.type).toBe('row')
     expect(row.alex).toBeCloseTo(300)
     expect(row.karin).toBeCloseTo(200)
   })

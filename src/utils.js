@@ -125,11 +125,8 @@ export function calcTransferRows(budget) {
   const rows = []
 
   if (fixedCosts.length > 0) {
-    rows.push({ type: 'header', label: 'Fixkosten' })
-    for (const item of fixedCosts) {
-      const amt = Number(item.amount) || 0
-      rows.push({ type: 'row', label: item.name, alex: amt * alexRatio, karin: amt * karinRatio })
-    }
+    const fixedTotal = fixedCosts.reduce((s, i) => s + (Number(i.amount) || 0), 0)
+    rows.push({ type: 'row', label: 'Fixkosten', alex: fixedTotal * alexRatio, karin: fixedTotal * karinRatio })
   }
 
   if (variableExpenses.length > 0) {

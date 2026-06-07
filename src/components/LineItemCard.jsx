@@ -95,59 +95,6 @@ export default function LineItemCard({ title, items, onChange, totalLabel, total
   )
 }
 
-// Unified card: all fixedCosts + variableExpenses shown as one flat list.
-// The two arrays are kept separate in the data model (needed by TransferView),
-// but the UI presents and edits them as a single list.
-export function CombinedCostsCard({ fixedCosts, variableExpenses, onFixedChange, onVariableChange, totalBase, accent, borderAccent }) {
-  // Tag each item with its source array so we know where to dispatch updates/deletes
-  const allItems = [
-    ...variableExpenses.map(i => ({ ...i, _src: 'variable' })),
-    ...fixedCosts.map(i => ({ ...i, _src: 'fixed' })),
-  ]
-
-  function handleChange(item, updated) {
-    const { _src, ...clean } = updated
-    if (item._src === 'fixed') {
-      onFixedChange(fixedCosts.map(i => i.id === clean.id ? clean : i))
-    } else {
-      onVariableChange(variableExpenses.map(i => i.id === clean.id ? clean : i))
-    }
-  }
-
-  function handleDelete(item) {
-    if (item._src === 'fixed') {
-      onFixedChange(fixedCosts.filter(i => i.id !== item.id))
-    } else {
-      onVariableChange(variableExpenses.filter(i => i.id !== item.id))
-    }
-  }
-
-  function addItem() {
-    // New items go into fixedCosts
-    onFixedChange([...fixedCosts, { id: uid(), name: '', amount: 0 }])
-  }
-
-  const total = sumItems(fixedCosts) + sumItems(variableExpenses)
-
-  return (
-    <Card title="Fixkosten" accent={accent} borderAccent={borderAccent}>
-      {allItems.map(item => (
-        <LineItem key={item.id} item={item} onChange={u => handleChange(item, u)} onDelete={() => handleDelete(item)} />
-      ))}
-      <AddButton onClick={addItem} />
-      <Divider />
-      <TotalRow label="Gesamt" total={total} base={totalBase} />
-    </Card>
-  )
-}
-
-function SectionLabel({ children }) {
-  return (
-    <p className="text-xs font-semibold uppercase tracking-wider mt-1 mb-1.5" style={{ color: 'rgba(255,255,255,0.38)' }}>
-      {children}
-    </p>
-  )
-}
 
 function AddButton({ onClick }) {
   return (

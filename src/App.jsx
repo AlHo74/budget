@@ -3,7 +3,7 @@ import { getBudget, saveBudget } from './api.js'
 import { defaultBudget } from './utils.js'
 import Header from './components/Header.jsx'
 import IncomeCard from './components/IncomeCard.jsx'
-import LineItemCard, { CombinedCostsCard } from './components/LineItemCard.jsx'
+import LineItemCard from './components/LineItemCard.jsx'
 import SummaryCard from './components/SummaryCard.jsx'
 import PersonSection from './components/PersonSection.jsx'
 import MobileBottomBar from './components/MobileBottomBar.jsx'
@@ -104,7 +104,7 @@ export default function App() {
           <TransferView budget={budget} />
         ) : (
           <>
-            {/* Two-column: (Einkommen + Übersicht) | Fixkosten */}
+            {/* Two-column: (Einkommen + Übersicht) | (Fixkosten + Ausgaben) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               <div className="space-y-6">
                 <IncomeCard
@@ -114,15 +114,24 @@ export default function App() {
                 <SummaryCard budget={budget} />
               </div>
 
-              <CombinedCostsCard
-                fixedCosts={budget.fixedCosts}
-                variableExpenses={budget.variableExpenses}
-                onFixedChange={fixedCosts => update({ fixedCosts })}
-                onVariableChange={variableExpenses => update({ variableExpenses })}
-                totalBase={totalBase}
-                accent="rgba(239,68,68,0.1)"
-                borderAccent="rgba(239,68,68,0.22)"
-              />
+              <div className="space-y-6">
+                <LineItemCard
+                  title="Fixkosten"
+                  items={budget.fixedCosts}
+                  onChange={fixedCosts => update({ fixedCosts })}
+                  totalLabel="Gesamt Fixkosten"
+                  totalBase={totalBase}
+                  accent="rgba(239,68,68,0.1)"
+                  borderAccent="rgba(239,68,68,0.22)"
+                />
+                <LineItemCard
+                  title="Ausgaben"
+                  items={budget.variableExpenses}
+                  onChange={variableExpenses => update({ variableExpenses })}
+                  totalLabel="Gesamt Ausgaben"
+                  totalBase={totalBase}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
