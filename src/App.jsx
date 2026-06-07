@@ -101,12 +101,15 @@ export default function App() {
           <TransferView budget={budget} />
         ) : (
           <>
-            {/* Two-column: Einkommen + Fixkosten & Ausgaben */}
+            {/* Two-column: (Einkommen + Übersicht) | Fixkosten */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-              <IncomeCard
-                income={budget.income}
-                onChange={income => update({ income })}
-              />
+              <div className="space-y-6">
+                <IncomeCard
+                  income={budget.income}
+                  onChange={income => update({ income })}
+                />
+                <SummaryCard budget={budget} />
+              </div>
 
               <CombinedCostsCard
                 fixedCosts={budget.fixedCosts}
@@ -118,8 +121,6 @@ export default function App() {
                 borderAccent="rgba(239,68,68,0.22)"
               />
             </div>
-
-            <SummaryCard budget={budget} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PersonSection

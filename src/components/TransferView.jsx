@@ -15,21 +15,34 @@ function ExpenseShareBadge() {
 
   if (error) return null
 
-  let text
-  if (balance === null) {
-    text = 'FamilyShare: Lade…'
-  } else if (Math.abs(balance) < 0.01) {
-    text = 'FamilyShare: Ausgeglichen ✓'
-  } else if (balance > 0) {
-    text = `FamilyShare: Karin schuldet Alex ${fmt(balance)}`
-  } else {
-    text = `FamilyShare: Alex schuldet Karin ${fmt(Math.abs(balance))}`
-  }
+  const settled = balance !== null && Math.abs(balance) < 0.01
+  const debtor = balance > 0 ? 'Karin' : 'Alex'
+  const creditor = balance > 0 ? 'Alex' : 'Karin'
+  const amount = balance !== null ? fmt(Math.abs(balance)) : null
 
   return (
-    <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-      {text}
-    </p>
+    <div
+      className="flex items-center justify-between rounded-xl px-4 py-3 mb-5"
+      style={{
+        background: settled
+          ? 'rgba(34,197,94,0.15)'
+          : 'rgba(251,191,36,0.12)',
+        border: `1px solid ${settled ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.28)'}`,
+      }}
+    >
+      <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+        FamilyShare
+      </span>
+      {balance === null ? (
+        <span className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Lade…</span>
+      ) : settled ? (
+        <span className="text-sm font-bold" style={{ color: '#86efac' }}>Ausgeglichen ✓</span>
+      ) : (
+        <span className="text-sm font-bold" style={{ color: '#fde68a' }}>
+          {debtor} schuldet {creditor} {amount}
+        </span>
+      )}
+    </div>
   )
 }
 
